@@ -1,0 +1,267 @@
+(page "triclojure-deck.html"
+  (:require [hoplon.reveal :refer [slideshow chapter slide notes highlight quicklist bullet]]
+            [tailrecursion.hoplon.reload :as r]))
+
+(r/reload-all)
+
+(defn chapter-intro []
+  (chapter :title "Hoplon"
+    (slide :title "What is Hoplon?"
+      (bullet "A ClojureScript client-side framework"))
+    (slide :title "Why Hoplon?"
+      (bullet "Ugh, a framework? Really?"))
+    (slide :title "Good Frameworks"
+      (quicklist
+       "Unify disparate ideas, technologies"
+       "Provide necessary primitives for reuse, extension"
+       "Aren't universally applicable"))
+    (slide :title "Bad Frameworks"
+      (quicklist
+       "Do too much"
+       "Don't decompose into distinct ideas, libraries"))
+    (slide :title "Hoplon: Good, we think!"
+      (quicklist
+       "Target domain is single page app (SPA)"
+       "Unifying concept is Lisp/Clojure"
+       "Made from distinct pieces"))
+    (slide :title "Why Hoplon?"
+      (quicklist
+       "Browsers way more than just a JavaScript runtime"
+       "ClojureScript, libraries can't reach dark corners"
+       "Libraries that touch DOM differently don't compose"
+       "Hoplon is Clojure/Script everywhere"))
+    (slide :title "Conceptual Pieces"
+      (quicklist
+        "Build instructions are programs, not data."
+        "Spreadsheet for modeling data flow in UI."
+        "HTML is an acceptable ClojureScript syntax."
+        "RPC for server interaction."))
+    (slide :title "Concrete Pieces"
+      (ul
+        (map
+         (fn [[piece desc]] (li (code piece) " - " desc))
+         [["boot"    "is a Clojure command-line utility"]
+          ["Javelin" "is a ClojureScript library"]
+          ["HLisp"   "is the HTML → ClojureScript compiler boot task and ClojureScript runtime"]
+          ["Castra"  "is a Clojure and ClojureScript library for RPC"]])))))
+
+(defn chapter-boot []
+  (chapter :title "Boot"
+    (slide :title "Why Boot?"
+      (quicklist
+       "Web apps have many formats, files, languages, targets"
+       "Impossible for a \"declarative\" build to be versatile enough"
+       "Programs are the ultimate in declaration!"
+       (span "Examples include " (code "~/.emacs.el") " and " (code "~/.vimrc"))))
+    (slide :title "What is Boot?"
+      (bullet "A boot loader for Clojure programs")
+      (quicklist
+       [(code "BIOS") " → " (code "Operating System")]
+       [(code "boot") " → your application"]))
+    (slide :title "Pieces of Boot"
+      (quicklist
+       [(code "loader") " - Clojure program in executable uberjar format"]
+       [(code "core") " - build environment library"]))
+    (slide :title "Boot Loader"
+      (quicklist
+       "Minimal environment pinned to a Clojure version"
+       ["Provides " (code "set-env!") " for adding Maven dependencies"]))
+    (slide :title "Boot Core"
+      (quicklist
+       "Functions for managing source, temporary, artifact files"
+       "Tasks for managing build lifecycle"
+       "Tasks are middlewares, lifecycle follows Ring"
+       ["Provides " (code "deftask") " for user tasks"]
+       ["No more " (code "clean") "!"]))
+    (slide :title "build.boot"
+      (quicklist
+       "Clojure program run in the boot core+loader environment"
+       "Application entry-point"))
+    (slide :title "hello.boot"
+      (highlight
+       ;;{{
+       #!/usr/bin/env boot
+       
+       #tailrecursion.boot.core/version "2.2.1"
+       
+       (defn -main [& args]
+         (println "Hello from boot!"))
+       ;;}}
+       )
+      (ol (map (comp li code)
+               ["chmod +x hello.boot" "./hello.boot" "Hello from boot!"])))
+    (slide :title "build.boot"
+      (highlight #=(slurp "build.boot")))
+    (slide :title "build.boot"
+      (bullet (code "$ boot dev"))
+      (highlight
+       ;;{{
+       $ boot dev
+       Serving slides at http://localhost:8000/triclojure-deck.html
+       Installing ClojureScript dependencies...
+       Jetty server stored in atom here: #'tailrecursion.boot.task.ring/server...
+       Compiling Hoplon pages...
+       • src/cljs/triclojure_deck/sample_code.cljs.hl
+       • src/cljs/triclojure_deck.cljs.hl
+       • src/cljs/hoplon/reveal.cljs.hl
+       • src/cljs/hoplon/util.cljs.hl
+       Compiling ClojureScript...
+       2014-02-27 14:58:48.082:INFO:oejs.Server:jetty-7.6.1.v20120215
+       2014-02-27 14:58:48.114:INFO:oejs.AbstractConnector:Started SelectChannelConnector@0.0.0.0:8000
+       ↳ Elapsed time: 12.775 sec › 00:01:08
+         ;;}}
+         ))))
+
+(defn chapter-javelin []
+  (chapter :title "Javelin"
+    (slide :title "Why Javelin?"
+      (quicklist
+       ["All web applications have a single " (em "state")]
+       ["This state changes when"
+        (quicklist "The user manipulates the application"
+                   "The server supplies the application new data")]
+       "Javelin is an abstract spreadsheet that provides macros, types, and functions for managing state asynchronously"))
+    (slide :title "Two Kinds of Cell"
+      (ol (li "Input") (li "Formula")))
+    (slide :title "Input Cells"
+      (span "Creating an input cell with the " (code "cell") " function.")
+      (highlight
+       ;;{{
+       (def n (cell 0))
+       @n ;=> 0
+
+       (swap! n inc)
+       @n ;=> 1
+       ;;}}
+       ))
+    (slide :title "Input Cells"
+      (span "Creating an input cell with the " (code "defc") " macro.")
+      (highlight
+       ;;{{
+       (defc n 0)
+       @n ;=> 0
+
+       (swap! n inc)
+       @n ;=> 1
+       ;;}}
+       ))
+    (slide :title "Formula Cells"
+      (span "Creating a formula cell with the " (code "cell=") " macro.")
+      (highlight
+       ;;{{
+       (defc n 0)
+       (def  n*5 (cell= (* n 5)))
+       @n   ;=> 0
+       @n*5 ;=> 0
+
+       (swap! n inc)
+       @n   ;=> 1
+       @n*5 ;=> 5
+       ;;}}
+       ))
+    (slide :title "Formula Cells"
+      (span "Creating a formula cell with the " (code "defc=") " macro.")
+      (highlight
+       ;;{{
+       (defc  n 0)
+       (defc= n*5 (* n 5))
+       @n   ;=> 0
+       @n*5 ;=> 0
+
+       (swap! n inc)
+       @n   ;=> 1
+       @n*5 ;=> 5
+       ;;}}
+       ))
+    (slide :title "Input Cell in Action"
+      (highlight
+       ;;{{
+       (let [cnt (cell 0)]
+         (div
+           (p (text "cnt = ~{cnt}"))
+           (button :on-click #(swap! cnt inc) "Increment!")))
+       ;;}}
+       )
+      (let [cnt (cell 0)]
+        (div
+          (p (text "cnt = ~{cnt}"))
+          (button :on-click #(swap! cnt inc) "Increment!"))))
+    (slide :title "Formula Cell in Action"
+      (highlight
+       ;;{{
+       (let [cnt   (cell 0)
+             cnt*5 (cell= (* cnt 5))]
+         (div
+           (p (text "cnt*5 = ~{cnt*5}"))
+           (button :on-click #(swap! cnt inc) "Increment!")
+           (button :on-click #(swap! cnt dec) "Decrement!")))
+       ;;}}
+       )
+      (let [cnt   (cell 0)
+            cnt*5 (cell= (* cnt 5))]
+        (div
+          (p (text "cnt = ~{cnt}, cnt*5 = ~{cnt*5}"))
+          (button :on-click #(swap! cnt inc) "Increment!")
+          (button :on-click #(swap! cnt dec) "Decrement!"))))))
+
+(defn chapter-hlisp []
+  (chapter :title "HLisp"
+    (slide :title "HTML as s-expressions"
+     (ul
+      (li "HTML elements can be represented as ClojureScript")
+      (li "ClojureScript can be represented as HTML")))
+    (slide :title "Hoplon with HTML syntax"
+       (highlight
+         ;;{{
+         <script type="text/hoplon">
+           (page "index.html")
+           (defn duo [x y]
+             (ul (li x)
+                 (li y)))
+         </script>
+         <html>
+           <body>
+             <h1>Hello, Hoplon</h1>
+             <!-- an HTML syntax call to the duo function -->
+             <duo>
+               <div>first thing</div>
+               <div>second thing</div>
+             </duo>
+           </body>
+         </html>
+         ;;}}
+    ))
+    (slide :title "Hoplon with CLJS syntax"
+      (highlight
+       ;;{{
+       (page "index.html")
+
+       (defn duo [x y]
+         (ul (li x)
+           (li y)))
+
+       (html
+         (body
+           (h1 "Hello, Hoplon")
+           (duo "first thing" "second thing")))
+       ;;}}
+       ))
+    (slide :title "defelem"
+      (highlight
+       ;;{{
+       (defelem slideshow
+         [attrs children]
+         (div :class "reveal"
+           (div (assoc attrs :class "slides")
+             children)))
+       ;;}}
+       ))))
+
+(html
+  (head)
+  (body
+    (slideshow :theme "sky"
+      (chapter-intro)
+      (chapter-boot)
+      (chapter-javelin)
+      (chapter-hlisp))))
