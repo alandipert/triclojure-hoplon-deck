@@ -18,6 +18,7 @@
          '[tailrecursion.boot.task.ring   :refer [dev-server]])
 
 (deftask dev
+  "Continuously recompile and serve slides locally."
   []
   (println "Serving slides at http://localhost:8000/triclojure-deck.html")
   (comp (watch)
