@@ -4,7 +4,7 @@
 
 (set-env!
  :dependencies '[[tailrecursion/boot.task "2.1.0"]
-                 [tailrecursion/hoplon "5.4.1"]
+                 [tailrecursion/hoplon "5.5.0"]
                  [tailrecursion/boot.notify "2.0.0-SNAPSHOT"]
                  [tailrecursion/boot.ring   "0.1.0-SNAPSHOT"]
                  [org.clojure/clojurescript "0.0-2138"]]
