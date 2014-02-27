@@ -20,7 +20,7 @@ Based on [hoplon-reveal-js][1] by
 
 ## Present
 
-    boot dev
+    boot present
 
 [1]: https://github.com/oubiwann/hoplon-reveal-js
 [2]: https://github.com/tailrecursion/boot
